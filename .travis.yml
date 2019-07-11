@@ -1,4 +1,4 @@
-dist: xenial
+dist: bionic
 language: python
 python:
   - '3.6'
@@ -11,5 +11,6 @@ install:
   - pip install poetry
   - poetry install
 script:
+  - docker service start
   - poetry run pylint -E migrado
   - poetry run pytest -svv --cov=migrado
