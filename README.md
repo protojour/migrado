@@ -69,7 +69,7 @@ The following environment variables are employed by migrado:
 
 If your ArangoDB instance is itself running on Docker, `MIGRADO_DOCKER_NETWORK` and `MIGRADO_DOCKER_SERVICE` may be configured so the created container can connect easily to the correct network and service.
 
-For connection to the Docker daemon, additional environment variables are accepted, `DOCKER_HOST`, `DOCKER_TLS_VERIFY` and `DOCKER_CERT_PATH`. They are same as those used by the Docker command-line client.
+For connection to the Docker daemon, additional environment variables are accepted; `DOCKER_HOST`, `DOCKER_TLS_VERIFY` and `DOCKER_CERT_PATH`. They are same as those used by the Docker command-line client.
 
 YAML schemas
 ------------
