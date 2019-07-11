@@ -1,13 +1,16 @@
 migrado
 =======
 
+![PyPI package](https://badge.fury.io/py/migrado.svg)
+![Build status](https://travis-ci.org/protojour/migrado.svg?branch=master)
+
 🥑 ArangoDB migrations and batch processing manager.
 
 migrado is a command-line client that can help build and run schema or data migrations against your ArangoDB instance. 
 
 migrado utilizes ArangoDB Transactions when running data migrations to ensure failed scripts are rolled back automatically. [Docker](https://docs.docker.com/install/) is required to run schema migrations, however no transaction safety is available at this point.
 
-Make sure to test this software for your use case before using in a production setting.
+**migrado should be considered alpha software.** Make sure you test well before using in a production setting.
 
 If you have trouble, open an issue. Contributions are welcome.
 
