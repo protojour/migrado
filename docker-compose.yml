@@ -1,0 +1,21 @@
+---
+version: '3.5'
+services:
+
+  test:
+    build:
+      context: .
+    tty: true
+    environment:
+      MIGRADO_DB: test
+      MIGRADO_HOST: arangodb
+    volumes:
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  arangodb:
+    image: arangodb
+    environment:
+      ARANGO_NO_AUTH: 1
+    ports:
+      - 8529:8529

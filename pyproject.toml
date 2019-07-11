@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "migrado"
+version = "0.1.0"
+description = "ArangoDB migrations and batch processing manager"
+authors = ["Eirik Krogstad <eirikkr@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/protojour/migrado"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+click = "^7.0"
+pyyaml = "^5.1"
+python-arango = "^4.4"
+docker = {version = "^4.0",extras = ["tls"]}
+
+[tool.poetry.dev-dependencies]
+pylint = "^2.3"
+pytest = "^4.6"
+pytest-cov = "^2.7"
+
+[tool.poetry.scripts]
+migrado = "migrado:migrado"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
