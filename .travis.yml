@@ -8,7 +8,7 @@ before_install:
   - docker run --name arangodb -d -e ARANGO_NO_AUTH=1 arangodb/arangodb
 install:
   - pip install pylint pytest pytest-cov
-  - pip install .
+  - pip install ./protojour/migrado
 script:
   - pylint -E migrado
   - pytest -svv --cov=migrado
