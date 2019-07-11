@@ -86,9 +86,9 @@ def test_run_script(clean_arango):
     db = os.getenv('MIGRADO_DB', 'test')
     coll = os.getenv('MIGRADO_STATE_COLL', 'migrado')
 
-    docker_image = 'arangodb'
-    docker_network = 'migrado_default'
-    docker_service = 'arangodb'
+    docker_image = os.getenv('MIGRADO_DOCKER_IMAGE', 'arangodb')
+    docker_network = os.getenv('MIGRADO_DOCKER_NETWORK', 'migrado_default')
+    docker_service = os.getenv('MIGRADO_DOCKER_SERVICE', 'arangodb')
 
     client = MigrationClient(host, port, db, coll)
 
