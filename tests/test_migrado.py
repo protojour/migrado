@@ -9,7 +9,7 @@ from migrado.constants import MIGRATION_TEMPLATE
 
 
 def test_version():
-    assert __version__ == '0.1.0'
+    assert __version__ == '0.1.1'
 
 
 def test_migrado(runner):
