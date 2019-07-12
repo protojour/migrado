@@ -210,4 +210,4 @@ TODO
 License
 -------
 
-migrado is copyright © 2019 Protojour AS, and is licensed under MIT. See [LICENSE.txt](./LICENSE.txt) for details.
+migrado is copyright © 2019 Protojour AS, and is licensed under MIT. See [LICENSE.txt](https://github.com/protojour/migrado/blob/master/LICENSE.txt) for details.
