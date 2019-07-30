@@ -48,7 +48,7 @@ def test_select_migrations():
 
 
 def test_parse_write_collections():
-    script = f'''
+    script = '''
     // write books
      // write authors
      //write author_of
@@ -79,13 +79,16 @@ def test_extract_migration():
         // add your reverse migration here
     }'''
 
-    script = f'''
+    script = '''
     test string please ignore
     {forward_function}
     also this
     {reverse_function}
     more garbage
-    '''
+    '''.format(
+        forward_function=forward_function,
+        reverse_function=reverse_function
+    )
 
     forward_migration = extract_migration(script, 'forward')
     reverse_migration = extract_migration(script, 'reverse')

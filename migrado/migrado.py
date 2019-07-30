@@ -79,11 +79,23 @@ def init(schema, path):
     if schema:
         schema = yaml.safe_load(schema)
         for collection in schema.get('collections', {}).keys():
-            forward_data.append(f'db._createDocumentCollection("{collection}")')
-            reverse_data.append(f'db._drop("{collection}")')
+            forward_data.append(
+                'db._createDocumentCollection("{collection}")'\
+                .format(collection=collection)
+            )
+            reverse_data.append(
+                'db._drop("{collection}")'\
+                .format(collection=collection)
+            )
         for collection in schema.get('edge_collections', {}).keys():
-            forward_data.append(f'db._createEdgeCollection("{collection}")')
-            reverse_data.append(f'db._drop("{collection}")')
+            forward_data.append(
+                'db._createEdgeCollection("{collection}")'\
+                .format(collection=collection)
+            )
+            reverse_data.append(
+                'db._drop("{collection}")'\
+                .format(collection=collection)
+            )
 
     if forward_data:
         initial_data = initial_data.replace(
@@ -100,7 +112,8 @@ def init(schema, path):
     initial_path.write_text(initial_data)
     initial_path.chmod(0o755)
 
-    print(f'Initial migration written to {initial_path}.')
+    print('Initial migration written to {initial_path}.'\
+        .format(initial_path=initial_path))
 
 
 @migrado.command()
@@ -125,15 +138,16 @@ def make(name, path):
     last_counter = last_migration.name[:4]
     counter = str(int(last_counter) + 1).zfill(4)
 
-    filename = f'{counter}.js'
+    filename = '{counter}.js'.format(counter=counter)
     if name:
-        filename = f'{counter}_{name}.js'
+        filename = '{counter}_{name}.js'.format(counter=counter, name=name)
 
     migration_path = migrations_path.joinpath(filename)
     migration_path.write_text(MIGRATION_TEMPLATE)
     migration_path.chmod(0o755)
 
-    print(f'New migration written to {migration_path} for your editing pleasure.')
+    print('New migration written to {migration_path} for your editing pleasure.'\
+        .format(migration_path=migration_path))
 
 
 @migrado.command()
@@ -180,7 +194,10 @@ def run(target, state, path,
 
     target = target or migration_ids[-1]
     if target not in migration_ids:
-        raise click.UsageError(f'Target {target} not found, please specify a four-digit migration id.')
+        raise click.UsageError(
+            'Target {target} not found, please specify a four-digit migration id.'\
+            .format(target=target)
+        )
 
     if not db:
         raise click.UsageError('Database name not specified, use --db or MIGRADO_DB')
@@ -195,7 +212,10 @@ def run(target, state, path,
         write_collections = parse_write_collections(script)
         migration = extract_migration(script, direction)
 
-        print(f'Running {direction} migration {id_} in transaction...')
+        print(
+            'Running {direction} migration {id_} in transaction...'\
+            .format(direction=direction, id_=id_)
+        )
         error = client.run_transaction(migration, write_collections)
 
         if error:
@@ -204,7 +224,10 @@ def run(target, state, path,
             if not no_interaction:
                 click.confirm('Run in Docker container?', abort=True)
 
-            print(f'Running {direction} migration {id_} in container...')
+            print(
+                'Running {direction} migration {id_} in container...'\
+                .format(direction=direction, id_=id_)
+            )
             logs = client.run_script(migration, docker_image, docker_network, docker_service)
 
             if logs:
@@ -213,6 +236,6 @@ def run(target, state, path,
                 raise click.Abort()
 
         client.write_state(id_)
-        print(f'State is now at {id_}.')
+        print('State is now at {id_}.'.format(id_=id_))
 
     print('Done.')

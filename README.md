@@ -17,6 +17,8 @@ If you have trouble, open an issue. Contributions are welcome.
 Installation
 ------------
 
+migrado requires Python 3.5 or higher.
+
 ```bash
 $ pip install --user migrado
 ```

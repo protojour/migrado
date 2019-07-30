@@ -75,12 +75,17 @@ class MigrationClient:
     def run_script(self, script, docker_image, docker_network, docker_service):
         """Execute JavaScript command through 'arangosh' in Docker container"""
         host = docker_service or self.host
-        command = f'''arangosh \\
-        --server.endpoint tcp://{host}:{self.port} \\
-        --server.database {self.db_name} \\
+        command = '''arangosh \\
+        --server.endpoint tcp://{host}:{port} \\
+        --server.database {db_name} \\
         --server.authentication false \\
         --javascript.execute-string '({script})()'
-        '''
+        '''.format(
+            host=host,
+            port=self.port,
+            db_name=self.db_name,
+            script=script
+        )
         container = self.docker_client.containers.run(
             image=docker_image,
             command=command,
