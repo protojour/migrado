@@ -66,8 +66,11 @@ The following environment variables are employed by migrado:
 - `MIGRADO_PATH`: Specifies the path to the migrations directory, replaces `-p`, `--path` (default: `migrations`).
 - `MIGRADO_DB`: Specifies the ArangoDB database name for generated migrations to interact with, replaces `-d`, `--db` (no default, but required for the `run` command).
 - `MIGRADO_COLL`: Specifies ArangoDb collection name to store migration state in, replaces `-c`, `--state-coll` (default: `migrado`).
+- `MIGRADO_TLS`: Use TLS for connection when running migrations, replaces `-T`, `--tls` (default: `False`).
 - `MIGRADO_HOST`: Specifies the database host for running migrations, replaces `-H`, `--host` (default: `localhost`).
 - `MIGRADO_PORT`: Specifies the database port for running migrations, replaces `-P`, `--port` (default: `8529`).
+- `MIGRADO_USER`: Specifies the database username for running migrations, replaces `-U`, `--username` (no default).
+- `MIGRADO_PASS`: Specifies the database password for running migrations, replaces `-W`, `--password` (no default).
 - `MIGRADO_DOCKER_IMAGE`: Specifies the Docker image (and optionally tag) for the container running migrations, replaces `-I`, `--docker-image` (default: `arangodb`).
 - `MIGRADO_DOCKER_NETWORK`: Specifies a Docker network mode or name for running migrations, replaces `-N`, `--docker-network`. Valid values are `host` (default, use the host network), or any network name.
 - `MIGRADO_DOCKER_SERVICE`: Specifies a Docker service to connect to when running migrations, replaces `-S`, `--docker-service` (default: same value as `MIGRADO_HOST`).
@@ -203,7 +206,6 @@ Please be careful when running schema migrations in reverse. As you can see, the
 
 TODO
 ----
-- [ ] Authentication against Docker and ArangoDB
 - [ ] Transaction-like safe runs for schema migrations
 - [ ] Automatic diffing of schema migrations
 - [ ] Using migrado to add indexes

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "migrado"
-version = "0.1.2"
+version = "0.2.0"
 description = "ArangoDB migrations and batch processing manager"
 authors = ["Eirik Krogstad <eirikkr@gmail.com>"]
 license = "MIT"

@@ -23,41 +23,19 @@ def migrado():
     pass
 
 
-path_option = click.option('-p', '--path', type=click.Path(),
+path_option = click.option(
+    '-p', '--path', type=click.Path(),
     default='migrations', show_default=True,
     envvar='MIGRADO_PATH',
-    help='Specify path to migrations directory')
-db_option = click.option('-d', '--db',
-    envvar='MIGRADO_DB',
-    help='Specify database name for migrations to interact with')
-coll_option = click.option('-c', '--state-coll',
-    default='migrado', show_default=True,
-    envvar='MIGRADO_COLL',
-    help='Specify collection name to store migration state in')
-host_option = click.option('-H', '--host',
-    default='localhost', show_default=True,
-    envvar='MIGRADO_HOST',
-    help='Specify database host to use for running migrations')
-port_option = click.option('-P', '--port',
-    default=8529, show_default=True,
-    envvar='MIGRADO_PORT',
-    help='Specify database port to use for running migrations')
-image_option = click.option('-I', '--docker-image',
-    default='arangodb', show_default=True,
-    envvar='MIGRADO_DOCKER_IMAGE',
-    help='Specify Docker image name for container running migrations')
-network_option = click.option('-N', '--docker-network',
-    default='host', show_default=True,
-    envvar='MIGRADO_DOCKER_NETWORK',
-    help='Specify Docker network name or mode for container running migrations')
-service_option = click.option('-S', '--docker-service',
-    envvar='MIGRADO_DOCKER_SERVICE',
-    help='Specify Docker service for running migrations against')
+    help='Specify path to migrations directory'
+)
 
 
 @migrado.command()
-@click.option('-s', '--schema', type=click.File('r'),
-    help='Build initial migration (collections) from YAML schema')
+@click.option(
+    '-s', '--schema', type=click.File('r'),
+    help='Build initial migration (collections) from YAML schema'
+)
 @path_option
 def init(schema, path):
     """
@@ -70,7 +48,7 @@ def init(schema, path):
     initial_path = migrations_path.joinpath('0001_initial.js')
 
     if initial_path.exists():
-        return print('Initial migration already exists.')
+        return click.echo('Initial migration already exists.')
 
     initial_data = MIGRATION_TEMPLATE
     forward_data = []
@@ -112,8 +90,10 @@ def init(schema, path):
     initial_path.write_text(initial_data)
     initial_path.chmod(0o755)
 
-    print('Initial migration written to {initial_path}.'\
-        .format(initial_path=initial_path))
+    click.echo(
+        'Initial migration written to {initial_path}.'\
+        .format(initial_path=initial_path)
+    )
 
 
 @migrado.command()
@@ -146,27 +126,75 @@ def make(name, path):
     migration_path.write_text(MIGRATION_TEMPLATE)
     migration_path.chmod(0o755)
 
-    print('New migration written to {migration_path} for your editing pleasure.'\
-        .format(migration_path=migration_path))
+    click.echo(
+        'New migration written to {migration_path} for your editing pleasure.'\
+        .format(migration_path=migration_path)
+    )
 
 
 @migrado.command()
-@click.option('-t', '--target',
-    help='Specify a four-digit target migration id')
-@click.option('-s', '--state',
-    help='Override current state migration id')
+@click.option(
+    '-t', '--target',
+    help='Specify a four-digit target migration id'
+)
+@click.option(
+    '-s', '--state',
+    help='Override current state migration id'
+)
 @path_option
-@db_option
-@coll_option
-@host_option
-@port_option
-@image_option
-@network_option
-@service_option
+@click.option('-d', '--db',
+    envvar='MIGRADO_DB',
+    help='Specify database name for migrations to interact with'
+)
+@click.option('-c', '--state-coll',
+    default='migrado', show_default=True,
+    envvar='MIGRADO_COLL',
+    help='Specify collection name to store migration state in'
+)
+@click.option('-T', '--tls',
+    is_flag=True, show_default=True,
+    envvar='MIGRADO_TLS',
+    help='Use TLS for connection when running migrations'
+)
+@click.option('-H', '--host',
+    default='localhost', show_default=True,
+    envvar='MIGRADO_HOST',
+    help='Specify database host to use for running migrations'
+)
+@click.option('-P', '--port',
+    default=8529, show_default=True,
+    envvar='MIGRADO_PORT',
+    help='Specify database port to use for running migrations'
+)
+@click.option('-U', '--username',
+    default='',
+    envvar='MIGRADO_USER',
+    help='Specify database username to use for running migrations'
+)
+@click.option('-W', '--password',
+    default='',
+    envvar='MIGRADO_PASS',
+    help='Specify database password to use for running migrations. If only username is given, migrado will prompt for password.'
+)
+@click.option('-I', '--docker-image',
+    default='arangodb', show_default=True,
+    envvar='MIGRADO_DOCKER_IMAGE',
+    help='Specify Docker image name for container running migrations'
+)
+@click.option('-N', '--docker-network',
+    default='host', show_default=True,
+    envvar='MIGRADO_DOCKER_NETWORK',
+    help='Specify Docker network name or mode for container running migrations'
+)
+@click.option('-S', '--docker-service',
+    envvar='MIGRADO_DOCKER_SERVICE',
+    help='Specify Docker service for running migrations against'
+)
 @click.option('-y', '--no-interaction', is_flag=True,
-    help="Answer yes to all confirmation queries")
+    help='Do not show interaction queries (assume \'yes\')'
+)
 def run(target, state, path,
-        db, state_coll, host, port,
+        db, state_coll, tls, host, port, username, password,
         docker_image, docker_network, docker_service,
         no_interaction):
     """
@@ -202,7 +230,15 @@ def run(target, state, path,
     if not db:
         raise click.UsageError('Database name not specified, use --db or MIGRADO_DB')
 
-    client = MigrationClient(host, port, db, state_coll)
+    if username and not password and not no_interaction:
+        password = click.prompt('Password', hide_input=True)
+
+    try:
+        client = MigrationClient(tls, host, port, username, password, db, state_coll)
+    except Exception as e:
+        click.echo('Error: %s' % e)
+        raise click.Abort()
+
     state = state or client.read_state()
 
     direction, migration_ids = select_migrations(state, target, migration_ids)
@@ -212,30 +248,30 @@ def run(target, state, path,
         write_collections = parse_write_collections(script)
         migration = extract_migration(script, direction)
 
-        print(
+        click.echo(
             'Running {direction} migration {id_} in transaction...'\
             .format(direction=direction, id_=id_)
         )
         error = client.run_transaction(migration, write_collections)
 
         if error:
-            print('Error!', error)
+            click.echo('Error! %s' % error)
 
             if not no_interaction:
                 click.confirm('Run in Docker container?', abort=True)
 
-            print(
+            click.echo(
                 'Running {direction} migration {id_} in container...'\
                 .format(direction=direction, id_=id_)
             )
             logs = client.run_script(migration, docker_image, docker_network, docker_service)
 
             if logs:
-                print('Error! Container says:')
-                print(logs)
+                click.echo('Error! Container says:')
+                click.echo(logs)
                 raise click.Abort()
 
         client.write_state(id_)
-        print('State is now at {id_}.'.format(id_=id_))
+        click.echo('State is now at {id_}.'.format(id_=id_))
 
-    print('Done.')
+    click.echo('Done.')

@@ -16,21 +16,29 @@ class MigrationClient:
     against ArangoDB
     """
 
-    def __init__(self, host, port, db, coll):
+    def __init__(self, tls, host, port, username, password, db, coll):
+        self.protocol = 'https' if tls else 'http'
         self.host = host
         self.port = port
+        self.username = username
+        self.password = password
         self.db_name = db
         self.coll_name = coll
 
-        self.db_client = ArangoClient(host=host, port=port)
+        self.db_client = ArangoClient(protocol=self.protocol, host=host, port=port)
         self.docker_client = docker.from_env()
 
-        self.sys_db = self.db_client.db('_system', verify=True)
+        self.sys_db = self.db_client.db(
+            name='_system',
+            username=username,
+            password=password,
+            verify=True
+        )
 
     @property
     def db(self):
         """Get database"""
-        return self.db_client.db(self.db_name)
+        return self.db_client.db(self.db_name, self.username, self.password)
 
     @property
     def state_coll(self):
@@ -76,16 +84,30 @@ class MigrationClient:
         """Execute JavaScript command through 'arangosh' in Docker container"""
         host = docker_service or self.host
         command = '''arangosh \\
-        --server.endpoint tcp://{host}:{port} \\
+        --server.endpoint {protocol}://{host}:{port} \\
         --server.database {db_name} \\
         --server.authentication false \\
         --javascript.execute-string '({script})()'
         '''.format(
+            protocol=self.protocol,
             host=host,
             port=self.port,
             db_name=self.db_name,
             script=script
         )
+        if self.username and self.password:
+            auth = '''
+            --server.authentication true \\
+            --server.username {username} \\
+            --server.password {password} \\
+            '''.format(
+                username=self.username,
+                password=self.password
+            )
+            command = command.replace(
+                '--server.authentication false \\',
+                auth
+            )
         container = self.docker_client.containers.run(
             image=docker_image,
             command=command,
