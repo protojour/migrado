@@ -5,6 +5,8 @@ Copyright © 2019 Protojour AS, licensed under MIT.
 See LICENSE.txt for details.
 """
 
+import subprocess
+
 from arango import ArangoClient
 from arango.exceptions import *
 import docker
@@ -25,15 +27,8 @@ class MigrationClient:
         self.db_name = db
         self.coll_name = coll
 
-        self.db_client = ArangoClient(protocol=self.protocol, host=host, port=port)
+        self.db_client = ArangoClient(f'{self.protocol}://{host}:{port}')
         self.docker_client = docker.from_env()
-
-        self.sys_db = self.db_client.db(
-            name='_system',
-            username=username,
-            password=password,
-            verify=True
-        )
 
     @property
     def db(self):
@@ -68,51 +63,49 @@ class MigrationClient:
         }
         return self.state_coll.insert(state, overwrite=True, silent=True)
 
-    def run_transaction(self, script, write_collections):
+    def run_transaction(self, script, write_collections,
+                        max_transaction_size=None, intermediate_commit_size=None, intermediate_commit_count=None):
         """Execute JavaScript command in transaction against ArangoDB"""
         try:
             return self.db.execute_transaction(
                 script,
                 write=write_collections,
                 sync=True,
-                allow_implicit=True
+                allow_implicit=True,
+                max_size=max_transaction_size,
+                intermediate_commit_size=intermediate_commit_size,
+                intermediate_commit_count=intermediate_commit_count
             )
         except TransactionExecuteError as e:
             return e
 
-    def run_script(self, script, docker_image, docker_network, docker_service):
-        """Execute JavaScript command through 'arangosh' in Docker container"""
-        host = docker_service or self.host
-        command = '''arangosh \\
-        --server.endpoint {protocol}://{host}:{port} \\
-        --server.database {db_name} \\
+    def run_script(self, script, arangosh=None, docker_image=None, docker_network=None, docker_service=None):
+        """Execute JavaScript command through 'arangosh', standalone or in Docker container"""
+        command = f'''{arangosh or 'arangosh'} \\
+        --server.endpoint {self.protocol}://{docker_service or self.host}:{self.port} \\
+        --server.database {self.db_name} \\
         --server.authentication false \\
         --javascript.execute-string '({script})()'
-        '''.format(
-            protocol=self.protocol,
-            host=host,
-            port=self.port,
-            db_name=self.db_name,
-            script=script
-        )
+        '''
         if self.username and self.password:
-            auth = '''
+            auth = f'''
             --server.authentication true \\
-            --server.username {username} \\
-            --server.password {password} \\
-            '''.format(
-                username=self.username,
-                password=self.password
-            )
+            --server.username {self.username} \\
+            --server.password {self.password} \\
+            '''
             command = command.replace(
                 '--server.authentication false \\',
                 auth
             )
-        container = self.docker_client.containers.run(
-            image=docker_image,
-            command=command,
-            network_mode=docker_network,
-            detach=True
-        )
-        container.wait()
-        return container.logs().decode('utf-8').replace('\\n', '\n')
+        if arangosh:
+            result = subprocess.run(command, shell=True, text=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+            return result.stdout.replace('\\n', '\n')
+        else:
+            container = self.docker_client.containers.run(
+                image=docker_image,
+                command=command,
+                network_mode=docker_network,
+                detach=True
+            )
+            container.wait()
+            return container.logs().decode('utf-8').replace('\\n', '\n')

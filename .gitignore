@@ -44,3 +44,4 @@ coverage.xml
 .python-version
 
 *.sublime-*
+migrations

@@ -16,7 +16,7 @@ def clean_arango():
     port = os.getenv('MIGRADO_PORT', 8529)
     db_name = os.getenv('MIGRADO_DB', 'test')
 
-    client = ArangoClient(host=host, port=port)
+    client = ArangoClient(f'http://{host}:{port}')
     sys_db = client.db('_system')
 
     if sys_db.has_database(db_name):

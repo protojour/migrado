@@ -26,11 +26,6 @@ def test_migrado_init(runner):
         assert Path('migrations').exists()
         assert Path('migrations/0001_initial.js').exists()
 
-        # with Path('migrations/0001_initial.js').open('r') as f:
-        #     content = f.read()
-        #     assert 'db._createDatabase("test")' in content
-        #     assert 'db._useDatabase("test")' in content
-
         result = runner.invoke(migrado, ['init'])
         assert result.exit_code == 0
         assert 'Initial migration already exists' in result.output

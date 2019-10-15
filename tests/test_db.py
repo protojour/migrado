@@ -24,10 +24,6 @@ def test_migration_client(clean_arango):
     client = MigrationClient(TLS, HOST, PORT, USERNAME, PASSWORD, DB, COLL)
     client_two = MigrationClient(TLS, HOST, PORT, USERNAME, PASSWORD, DB, COLL)
 
-    with pytest.raises(ServerConnectionError):
-        client_inacessible = \
-            MigrationClient(TLS, 'inaccessible', PORT, USERNAME, PASSWORD, DB, COLL)
-
 
 def test_read_write_state(clean_arango):
 
@@ -47,7 +43,7 @@ def test_run_transaction(clean_arango):
 
     client = MigrationClient(TLS, HOST, PORT, USERNAME, PASSWORD, DB, COLL)
 
-    error = client.run_transaction(None, None)
+    error = client.run_transaction(None, None,)
     assert error
 
     error = client.run_transaction('', [])
@@ -78,12 +74,15 @@ def test_run_transaction(clean_arango):
 
 def test_run_script(clean_arango):
 
-    client = MigrationClient(TLS, HOST, PORT, USERNAME, PASSWORD, DB, COLL)
+    client = MigrationClient(TLS, HOST, PORT, 'test', 'hunter2', DB, COLL)
 
-    output = client.run_script(None, DOCKER_IMAGE, DOCKER_NETWORK, DOCKER_SERVICE)
+    output = client.run_script(None, '/bad/path/to/arangosh')
+    assert '/bad/path/to/arangosh: not found' in output
+
+    output = client.run_script(None, None, DOCKER_IMAGE, DOCKER_NETWORK, DOCKER_SERVICE)
     assert 'None is not defined' in output
 
-    output = client.run_script('', DOCKER_IMAGE, DOCKER_NETWORK, DOCKER_SERVICE)
+    output = client.run_script('', None, DOCKER_IMAGE, DOCKER_NETWORK, DOCKER_SERVICE)
     assert 'Unexpected token' in output
 
     assert not client.db.has_collection('things')
@@ -95,6 +94,6 @@ def test_run_script(clean_arango):
     }
     '''
 
-    output = client.run_script(valid_function, DOCKER_IMAGE, DOCKER_NETWORK, DOCKER_SERVICE)
+    output = client.run_script(valid_function, None, DOCKER_IMAGE, DOCKER_NETWORK, DOCKER_SERVICE)
     assert output == ''
     assert client.db.has_collection('things')
