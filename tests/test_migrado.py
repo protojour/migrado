@@ -9,7 +9,7 @@ from migrado.constants import MIGRATION_TEMPLATE
 
 
 def test_version():
-    assert __version__ == '0.1.1'
+    assert __version__ == '0.4.0'
 
 
 def test_migrado(runner):
@@ -61,12 +61,20 @@ def test_migrado_init_schema(runner):
             assert content.index('db._drop("author_of")') < content.index('forward() // default')
 
 
-def test_migrado_make(runner):
+def test_migrado_inspect(runner):
     with runner.isolated_filesystem():
 
-        result = runner.invoke(migrado, ['make'])
-        assert result.exit_code == 2
-        assert 'No migrations found' in result.output
+        result = runner.invoke(migrado, ['init'])
+        assert result.exit_code == 0
+
+        result = runner.invoke(migrado, ['inspect'])
+        assert result.exit_code == 0
+        assert 'Database migration state is at 0000' in result.output
+        assert 'Latest migration on disk is 0001' in result.output
+
+
+def test_migrado_make(runner):
+    with runner.isolated_filesystem():
 
         result = runner.invoke(migrado, ['init'])
         assert result.exit_code == 0
@@ -89,10 +97,6 @@ def test_migrado_make(runner):
 def test_migrado_run(runner, clean_arango):
     schema_path = Path('tests/test_schema.yml').resolve()
     with runner.isolated_filesystem():
-
-        result = runner.invoke(migrado, ['run'])
-        assert result.exit_code == 2
-        assert 'No migrations found' in result.output
 
         result = runner.invoke(migrado, ['init', '--schema', schema_path])
         assert result.exit_code == 0

@@ -13,7 +13,8 @@ import yaml
 from .constants import MIGRATION_TEMPLATE
 from .db_client import MigrationClient
 from .utils import (
-    ensure_path, select_migrations, parse_write_collections, extract_migration
+    ensure_path, check_migrations, check_db, check_password,
+    select_migrations, parse_write_collections, extract_migration
 )
 
 
@@ -28,6 +29,42 @@ path_option = click.option(
     default='migrations', show_default=True,
     envvar='MIGRADO_PATH', show_envvar=True,
     help='Specify path to migrations directory'
+)
+db_option = click.option('-d', '--db',
+    envvar='MIGRADO_DB', show_envvar=True,
+    help='Specify database name for migrations to interact with'
+)
+coll_option = click.option('-c', '--state-coll',
+    default='migrado', show_default=True,
+    envvar='MIGRADO_COLL', show_envvar=True,
+    help='Specify collection name to store migration state in'
+)
+tls_option = click.option('-T', '--tls', is_flag=True,
+    envvar='MIGRADO_TLS', show_envvar=True,
+    help='Use TLS for connection when running migrations'
+)
+host_option = click.option('-H', '--host',
+    default='localhost', show_default=True,
+    envvar='MIGRADO_HOST', show_envvar=True,
+    help='Specify database host to use for running migrations'
+)
+port_option = click.option('-P', '--port', type=int,
+    default=8529, show_default=True,
+    envvar='MIGRADO_PORT', show_envvar=True,
+    help='Specify database port to use for running migrations'
+)
+user_option = click.option('-U', '--username',
+    default='',
+    envvar='MIGRADO_USER', show_envvar=True,
+    help='Specify database username to use for running migrations'
+)
+pass_option = click.option('-W', '--password',
+    default='',
+    envvar='MIGRADO_PASS', show_envvar=True,
+    help='Specify database password to use for running migrations. If only username is given, migrado will prompt for password.'
+)
+yes_option = click.option('-y', '--no-interaction', is_flag=True,
+    help='Do not show interaction queries (assume \'yes\')'
 )
 
 
@@ -82,6 +119,38 @@ def init(schema, path):
 
 
 @migrado.command()
+@path_option
+@db_option
+@coll_option
+@tls_option
+@host_option
+@port_option
+@user_option
+@pass_option
+@yes_option
+def inspect(path, db, state_coll, tls, host, port, username, password, no_interaction):
+    """
+    Inspect the current state of migrations
+    """
+    migrations_path = ensure_path(path)
+    migrations = sorted(migrations_path.glob('[0-9]' * 4 + '*.js'))
+    last_migration = migrations[-1]
+    last_counter = last_migration.name[:4]
+
+    check_migrations(migrations)
+    check_db(db)
+
+    password = check_password(username, password, no_interaction)
+
+    client = MigrationClient(tls, host, port, username, password, db, state_coll)
+
+    db_state = client.read_state()
+
+    click.echo(f'Database migration state is at {db_state}.')
+    click.echo(f'Latest migration on disk is {last_counter}.')
+
+
+@migrado.command()
 @click.option('-n', '--name',
     help='Give an optional name for the migration')
 @path_option
@@ -96,8 +165,7 @@ def make(name, path):
     migrations_path = ensure_path(path)
     migrations = sorted(migrations_path.glob('[0-9]' * 4 + '*.js'))
 
-    if not migrations:
-        raise click.UsageError('No migrations found, run migrado init')
+    check_migrations(migrations)
 
     last_migration = migrations[-1]
     last_counter = last_migration.name[:4]
@@ -124,39 +192,13 @@ def make(name, path):
     help='Override current state migration id'
 )
 @path_option
-@click.option('-d', '--db',
-    envvar='MIGRADO_DB', show_envvar=True,
-    help='Specify database name for migrations to interact with'
-)
-@click.option('-c', '--state-coll',
-    default='migrado', show_default=True,
-    envvar='MIGRADO_COLL', show_envvar=True,
-    help='Specify collection name to store migration state in'
-)
-@click.option('-T', '--tls', is_flag=True,
-    envvar='MIGRADO_TLS', show_envvar=True,
-    help='Use TLS for connection when running migrations'
-)
-@click.option('-H', '--host',
-    default='localhost', show_default=True,
-    envvar='MIGRADO_HOST', show_envvar=True,
-    help='Specify database host to use for running migrations'
-)
-@click.option('-P', '--port', type=int,
-    default=8529, show_default=True,
-    envvar='MIGRADO_PORT', show_envvar=True,
-    help='Specify database port to use for running migrations'
-)
-@click.option('-U', '--username',
-    default='',
-    envvar='MIGRADO_USER', show_envvar=True,
-    help='Specify database username to use for running migrations'
-)
-@click.option('-W', '--password',
-    default='',
-    envvar='MIGRADO_PASS', show_envvar=True,
-    help='Specify database password to use for running migrations. If only username is given, migrado will prompt for password.'
-)
+@db_option
+@coll_option
+@tls_option
+@host_option
+@port_option
+@user_option
+@pass_option
 @click.option('-I', '--docker-image',
     default='arangodb', show_default=True,
     envvar='MIGRADO_DOCKER_IMAGE', show_envvar=True,
@@ -183,9 +225,7 @@ def make(name, path):
 @click.option('-a', '--arangosh', type=click.Path(),
     help='Use standalone arangosh from given path instead of Docker container'
 )
-@click.option('-y', '--no-interaction', is_flag=True,
-    help='Do not show interaction queries (assume \'yes\')'
-)
+@yes_option
 def run(target, state, path,
         db, state_coll, tls, host, port, username, password,
         docker_image, docker_network, docker_service,
@@ -211,18 +251,14 @@ def run(target, state, path,
     migrations_dict = {migration.name[:4]: migration for migration in migrations}
     migration_ids = [id_ for id_ in migrations_dict]
 
-    if not migrations:
-        raise click.UsageError('No migrations found, run migrado init')
+    check_migrations(migrations)
+    check_db(db)
 
     target = target or migration_ids[-1]
     if target not in migration_ids:
         raise click.UsageError(f'Target {target} not found, please specify a four-digit migration id.')
 
-    if not db:
-        raise click.UsageError('Database name not specified, use -d, --db or MIGRADO_DB')
-
-    if username and not password and not no_interaction:
-        password = click.prompt('Password', hide_input=True)
+    password = check_password(username, password, no_interaction)
 
     client = MigrationClient(tls, host, port, username, password, db, state_coll)
 

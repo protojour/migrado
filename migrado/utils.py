@@ -8,12 +8,30 @@ See LICENSE.txt for details.
 from pathlib import Path
 import re
 
+import click
+
 
 def ensure_path(path):
     """Ensure path given by `path` exists"""
     path = Path(path)
     path.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def check_migrations(migrations):
+    if not migrations:
+        raise click.UsageError('No migrations found, run migrado init')
+
+
+def check_db(db):
+    if not db:
+        raise click.UsageError('Database name not specified, use -d, --db or MIGRADO_DB')
+
+
+def check_password(username, password, no_interaction):
+    if username and not password and not no_interaction:
+        return click.prompt('Password', hide_input=True)
+    return password
 
 
 def select_migrations(current, target, migration_ids):

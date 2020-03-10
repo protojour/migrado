@@ -1,4 +1,4 @@
-.PHONY: clean
+.PHONY: clean test
 
 clean:
 	find . -name '*.pyc' -delete

@@ -1,6 +1,8 @@
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
+import click
 
 from migrado.utils import *
 
@@ -21,6 +23,53 @@ def test_ensure_path():
 
     assert not path.exists()
     assert not path.parent.exists()
+
+
+def test_check_migrations():
+    migrations = ['Some']
+    assert check_migrations(migrations) is None
+
+    migrations = None
+    with pytest.raises(click.UsageError, match='No migrations found'):
+        check_migrations(migrations)
+
+
+def test_check_db():
+    db = 'migrado'
+    assert check_db(db) is None
+
+    db = None
+    with pytest.raises(click.UsageError, match='Database name not specified'):
+        check_db(db)
+
+
+def test_check_password(runner):
+    prompt = MagicMock(return_value='Password?')
+    with patch('click.prompt', side_effect=prompt):
+
+        username, password, no_interaction = None, None, True
+        assert check_password(username, password, no_interaction) == password
+        assert not prompt.called
+
+        username, password, no_interaction = None, None, False
+        assert check_password(username, password, no_interaction) == password
+        assert not prompt.called
+
+        username, password, no_interaction = 'username', 'password', True
+        assert check_password(username, password, no_interaction) == password
+        assert not prompt.called
+
+        username, password, no_interaction = 'username', 'password', False
+        assert check_password(username, password, no_interaction) == password
+        assert not prompt.called
+
+        username, password, no_interaction = 'username', None, True
+        assert check_password(username, password, no_interaction) == password
+        assert not prompt.called
+
+        username, password, no_interaction = 'username', None, False
+        assert check_password(username, password, no_interaction) == 'Password?'
+        assert prompt.called
 
 
 def test_select_migrations():

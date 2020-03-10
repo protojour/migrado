@@ -56,6 +56,12 @@ If you wrote a `reverse()` migration, you can revert to an earlier point by spec
 $ migrado run --target 0001
 ```
 
+You can compare the current database migration state with migration files on disk with:
+
+```bash
+$ migrado inspect
+```
+
 Use the `--help` option for help on any command when using the client.
 
 Environment vars
