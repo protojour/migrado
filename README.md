@@ -201,13 +201,6 @@ function reverse() {
 
 Please be careful when running schema migrations in reverse. As you can see, the `reverse()` function above would drop your collections if you were to reverse beyond this point. Currently, you will not be able to do so for an initial migration.
 
-TODO
-----
-- [ ] Transaction-like safe runs for schema migrations
-- [ ] Automatic diffing of schema migrations
-- [ ] Using migrado to add indexes
-- [ ] Using migrado to add recurring tasks
-
 License
 -------
 
