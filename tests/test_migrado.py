@@ -9,7 +9,7 @@ from migrado.constants import MIGRATION_TEMPLATE
 
 
 def test_version():
-    assert __version__ == '0.4.0'
+    assert __version__ == '0.5.0'
 
 
 def test_migrado(runner):
@@ -109,12 +109,15 @@ def test_migrado_run(runner, clean_arango):
         assert result.exit_code == 2
         assert 'Database name not specified' in result.output
 
-        result = runner.invoke(migrado, ['run', '--no-interaction'])
+        result = runner.invoke(migrado, ['run', '--host', 'nohost'])
         assert result.exit_code == 1
-        assert 'Error!' in result.output
-        assert 'not connected' in result.output
+        assert 'Name or service not known' in result.output
 
-        result = runner.invoke(migrado, ['run', '--docker-network', 'migrado_default', '--docker-service', 'arangodb'], input='y\n')
+        result = runner.invoke(migrado, ['run', '--arangosh', '/bad/path'])
+        assert result.exit_code == 1
+        assert 'No such file or directory' in result.output
+
+        result = runner.invoke(migrado, ['run', '--no-interaction'])
         assert result.exit_code == 0
         assert 'State is now at 0001.' in result.output
         assert 'Done.' in result.output

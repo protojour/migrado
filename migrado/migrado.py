@@ -18,12 +18,6 @@ from .utils import (
 )
 
 
-@click.group()
-def migrado():
-    """ArangoDB migrations and batch processing manager"""
-    pass
-
-
 path_option = click.option(
     '-p', '--path', type=click.Path(),
     default='migrations', show_default=True,
@@ -66,6 +60,12 @@ pass_option = click.option('-W', '--password',
 yes_option = click.option('-y', '--no-interaction', is_flag=True,
     help='Do not show interaction queries (assume \'yes\')'
 )
+
+
+@click.group()
+def migrado():
+    """ArangoDB migrations and batch processing manager"""
+    pass
 
 
 @migrado.command()
@@ -199,20 +199,6 @@ def make(name, path):
 @port_option
 @user_option
 @pass_option
-@click.option('-I', '--docker-image',
-    default='arangodb', show_default=True,
-    envvar='MIGRADO_DOCKER_IMAGE', show_envvar=True,
-    help='Specify Docker image name for container running migrations'
-)
-@click.option('-N', '--docker-network',
-    default='host', show_default=True,
-    envvar='MIGRADO_DOCKER_NETWORK', show_envvar=True,
-    help='Specify Docker network name or mode for container running migrations'
-)
-@click.option('-S', '--docker-service',
-    envvar='MIGRADO_DOCKER_SERVICE', show_envvar=True,
-    help='Specify Docker service for running migrations against'
-)
 @click.option('--max-transaction-size', type=int,
     help='Specify RocksDB max transaction size in bytes'
 )
@@ -223,12 +209,12 @@ def make(name, path):
     help='Specify RocksDB transaction operation count before making intermediate commits'
 )
 @click.option('-a', '--arangosh', type=click.Path(),
-    help='Use standalone arangosh from given path instead of Docker container'
+    default='arangosh',
+    help='Use arangosh from given path'
 )
 @yes_option
 def run(target, state, path,
         db, state_coll, tls, host, port, username, password,
-        docker_image, docker_network, docker_service,
         max_transaction_size, intermediate_commit_size, intermediate_commit_count,
         arangosh, no_interaction):
     """
@@ -262,7 +248,11 @@ def run(target, state, path,
 
     client = MigrationClient(tls, host, port, username, password, db, state_coll)
 
-    state = state or client.read_state()
+    try:
+        state = state or client.read_state()
+    except Exception as error:
+        click.echo('Error! %s' % error)
+        raise click.Abort()
 
     direction, migration_ids = select_migrations(state, target, migration_ids)
 
@@ -278,16 +268,11 @@ def run(target, state, path,
         if error:
             click.echo('Error! %s' % error)
 
-            method = 'through arangosh' if arangosh else 'in Docker container'
-            if not no_interaction:
-                click.confirm(f'Run migration {method}?', abort=True)
-
-            click.echo(f'Running {direction} migration {id_} {method}...')
-            error = client.run_script(migration, arangosh, docker_image, docker_network, docker_service)
+            click.echo(f'Running {direction} migration {id_} as schema migration...')
+            error = client.run_script(migration, arangosh)
 
             if error:
-                click.echo('Error! arangosh says:')
-                click.echo(error)
+                click.echo('Error! %s' % error)
                 raise click.Abort()
 
         client.write_state(id_)

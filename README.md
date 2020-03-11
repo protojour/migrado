@@ -8,7 +8,7 @@ migrado
 
 migrado is a command-line client that can help build and run schema or data migrations against your ArangoDB instance. 
 
-migrado utilizes ArangoDB Transactions when running data migrations to ensure failed scripts are rolled back automatically. [Docker](https://docs.docker.com/install/) or arangosh from the [ArangoDB Client Tools](https://www.arangodb.com/download-major/) is required to run schema migrations, however no transaction safety is available at this point.
+migrado utilizes ArangoDB Transactions when running data migrations to ensure failed scripts are rolled back automatically. arangosh from the [ArangoDB Client Tools](https://www.arangodb.com/download-major/) is required to run schema migrations, however no transaction safety is available at this point.
 
 **migrado should be considered alpha software.** Make sure you test well before using in a production setting.
 
@@ -77,13 +77,6 @@ The following environment variables are employed by migrado:
 - `MIGRADO_PORT`: Specifies the database port for running migrations, replaces `-P`, `--port` (default: `8529`).
 - `MIGRADO_USER`: Specifies the database username for running migrations, replaces `-U`, `--username` (no default).
 - `MIGRADO_PASS`: Specifies the database password for running migrations, replaces `-W`, `--password` (no default).
-- `MIGRADO_DOCKER_IMAGE`: Specifies the Docker image (and optionally tag) for the container running migrations, replaces `-I`, `--docker-image` (default: `arangodb`).
-- `MIGRADO_DOCKER_NETWORK`: Specifies a Docker network mode or name for running migrations, replaces `-N`, `--docker-network`. Valid values are `host` (default, use the host network), or any network name.
-- `MIGRADO_DOCKER_SERVICE`: Specifies a Docker service to connect to when running migrations, replaces `-S`, `--docker-service` (default: same value as `MIGRADO_HOST`).
-
-If your ArangoDB instance is itself running on Docker, `MIGRADO_DOCKER_NETWORK` and `MIGRADO_DOCKER_SERVICE` may be configured so the created container can connect easily to the correct network and service.
-
-For connection to the Docker daemon, additional environment variables are accepted; `DOCKER_HOST`, `DOCKER_TLS_VERIFY` and `DOCKER_CERT_PATH`. They are same as those used by the Docker command-line client.
 
 YAML schemas
 ------------
@@ -182,11 +175,9 @@ function reverse() {
 
 Please make sure you read [limitations when running transactions](https://www.arangodb.com/docs/stable/transactions-limitations.html) in the ArangoDB documentation. In particular, _creation and deletion of databases, collections, and indexes_ is not allowed in transactions.
 
-If a migration contains such operations, you will be asked if you want to run the migration through Docker.
-
 ### Schema migrations
 
-Schema migrations are stuctured in the same way as data migrations, but are run against `arangosh` in a container from an [official arangodb Docker image](https://hub.docker.com/_/arangodb). There is no transaction safety when running schema migrations.
+Schema migrations are stuctured in the same way as data migrations, but are run against `arangosh` as opposed to the HTTP API. There is no transaction safety when running schema migrations.
 
 Schema migrations are structured the same way as data migrations, but `// write` declarations are not required. All operations are allowed.
 

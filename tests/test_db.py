@@ -14,9 +14,6 @@ USERNAME = os.getenv('MIGRADO_USER', '')
 PASSWORD = os.getenv('MIGRADO_PASS', '')
 DB = os.getenv('MIGRADO_DB', 'test')
 COLL = os.getenv('MIGRADO_STATE_COLL', 'migrado')
-DOCKER_IMAGE = os.getenv('MIGRADO_DOCKER_IMAGE', 'arangodb')
-DOCKER_NETWORK = os.getenv('MIGRADO_DOCKER_NETWORK', 'migrado_default')
-DOCKER_SERVICE = os.getenv('MIGRADO_DOCKER_SERVICE', 'arangodb')
 
 
 def test_migration_client(clean_arango):
@@ -76,13 +73,10 @@ def test_run_script(clean_arango):
 
     client = MigrationClient(TLS, HOST, PORT, 'test', 'hunter2', DB, COLL)
 
-    output = client.run_script(None, '/bad/path/to/arangosh')
-    assert '/bad/path/to/arangosh: not found' in output
-
-    output = client.run_script(None, None, DOCKER_IMAGE, DOCKER_NETWORK, DOCKER_SERVICE)
+    output = client.run_script(None, 'arangosh')
     assert 'None is not defined' in output
 
-    output = client.run_script('', None, DOCKER_IMAGE, DOCKER_NETWORK, DOCKER_SERVICE)
+    output = client.run_script('', 'arangosh')
     assert 'Unexpected token' in output
 
     assert not client.db.has_collection('things')
@@ -94,6 +88,6 @@ def test_run_script(clean_arango):
     }
     '''
 
-    output = client.run_script(valid_function, None, DOCKER_IMAGE, DOCKER_NETWORK, DOCKER_SERVICE)
+    output = client.run_script(valid_function, 'arangosh')
     assert output == ''
     assert client.db.has_collection('things')

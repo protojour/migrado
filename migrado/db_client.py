@@ -9,7 +9,6 @@ import subprocess
 
 from arango import ArangoClient
 from arango.exceptions import *
-import docker
 
 
 class MigrationClient:
@@ -28,7 +27,6 @@ class MigrationClient:
         self.coll_name = coll
 
         self.db_client = ArangoClient(f'{self.protocol}://{host}:{port}')
-        self.docker_client = docker.from_env()
 
     @property
     def db(self):
@@ -79,33 +77,30 @@ class MigrationClient:
         except TransactionExecuteError as e:
             return e
 
-    def run_script(self, script, arangosh=None, docker_image=None, docker_network=None, docker_service=None):
-        """Execute JavaScript command through 'arangosh', standalone or in Docker container"""
-        command = f'''{arangosh or 'arangosh'} \\
-        --server.endpoint {self.protocol}://{docker_service or self.host}:{self.port} \\
-        --server.database {self.db_name} \\
-        --server.authentication false \\
-        --javascript.execute-string '({script})()'
-        '''
+    def run_script(self, script, arangosh):
+        """Execute JavaScript command through 'arangosh'"""
+        command = [
+            arangosh,
+            '--server.endpoint', f'{self.protocol}://{self.host}:{self.port}',
+            '--server.database', f'{self.db_name}'
+        ]
         if self.username and self.password:
-            auth = f'''
-            --server.authentication true \\
-            --server.username {self.username} \\
-            --server.password {self.password} \\
-            '''
-            command = command.replace(
-                '--server.authentication false \\',
-                auth
-            )
-        if arangosh:
-            result = subprocess.run(command, shell=True, text=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-            return result.stdout.replace('\\n', '\n')
+            command += [
+                '--server.authentication', 'true'
+                '--server.username', self.username,
+                '--server.password', self.password,
+            ]
         else:
-            container = self.docker_client.containers.run(
-                image=docker_image,
-                command=command,
-                network_mode=docker_network,
-                detach=True
-            )
-            container.wait()
-            return container.logs().decode('utf-8').replace('\\n', '\n')
+            command += [
+                '--server.authentication', 'false',
+            ]
+        command += [
+            '--javascript.execute-string', f'({script})()'
+        ]
+
+        try:
+            result = subprocess.run(command, text=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        except FileNotFoundError as e:
+            return str(e)
+
+        return result.stdout.replace('\\n', '\n')

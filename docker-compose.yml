@@ -11,7 +11,6 @@ services:
       MIGRADO_HOST: arangodb
     volumes:
       - .:/app
-      - /var/run/docker.sock:/var/run/docker.sock
 
   arangodb:
     image: arangodb
