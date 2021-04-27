@@ -5,8 +5,6 @@ Copyright © 2019 Protojour AS, licensed under MIT.
 See LICENSE.txt for details.
 """
 
-from pathlib import Path
-
 import click
 import yaml
 
@@ -24,40 +22,49 @@ path_option = click.option(
     envvar='MIGRADO_PATH', show_envvar=True,
     help='Specify path to migrations directory'
 )
-db_option = click.option('-d', '--db',
+db_option = click.option(
+    '-d', '--db',
     envvar='MIGRADO_DB', show_envvar=True,
     help='Specify database name for migrations to interact with'
 )
-coll_option = click.option('-c', '--state-coll',
+coll_option = click.option(
+    '-c', '--state-coll',
     default='migrado', show_default=True,
     envvar='MIGRADO_COLL', show_envvar=True,
     help='Specify collection name to store migration state in'
 )
-tls_option = click.option('-T', '--tls', is_flag=True,
+tls_option = click.option(
+    '-T', '--tls', is_flag=True,
     envvar='MIGRADO_TLS', show_envvar=True,
     help='Use TLS for connection when running migrations'
 )
-host_option = click.option('-H', '--host',
+host_option = click.option(
+    '-H', '--host',
     default='localhost', show_default=True,
     envvar='MIGRADO_HOST', show_envvar=True,
     help='Specify database host to use for running migrations'
 )
-port_option = click.option('-P', '--port', type=int,
+port_option = click.option(
+    '-P', '--port', type=int,
     default=8529, show_default=True,
     envvar='MIGRADO_PORT', show_envvar=True,
     help='Specify database port to use for running migrations'
 )
-user_option = click.option('-U', '--username',
+user_option = click.option(
+    '-U', '--username',
     default='',
     envvar='MIGRADO_USER', show_envvar=True,
     help='Specify database username to use for running migrations'
 )
-pass_option = click.option('-W', '--password',
+pass_option = click.option(
+    '-W', '--password',
     default='',
     envvar='MIGRADO_PASS', show_envvar=True,
-    help='Specify database password to use for running migrations. If only username is given, migrado will prompt for password.'
+    help='Specify database password to use for running migrations. If only username is given, \
+    migrado will prompt for password.'
 )
-yes_option = click.option('-y', '--no-interaction', is_flag=True,
+yes_option = click.option(
+    '-y', '--no-interaction', is_flag=True,
     help='Do not show interaction queries (assume \'yes\')'
 )
 
@@ -152,7 +159,7 @@ def inspect(path, db, state_coll, tls, host, port, username, password, no_intera
 
 @migrado.command()
 @click.option('-n', '--name',
-    help='Give an optional name for the migration')
+              help='Give an optional name for the migration')
 @path_option
 def make(name, path):
     """
@@ -183,14 +190,10 @@ def make(name, path):
 
 
 @migrado.command()
-@click.option(
-    '-t', '--target',
-    help='Specify a four-digit target migration id'
-)
-@click.option(
-    '-s', '--state',
-    help='Override current state migration id'
-)
+@click.option('-t', '--target',
+              help='Specify a four-digit target migration id')
+@click.option('-s', '--state',
+              help='Override current state migration id')
 @path_option
 @db_option
 @coll_option
@@ -200,30 +203,25 @@ def make(name, path):
 @user_option
 @pass_option
 @click.option('--max-transaction-size', type=int,
-    help='Specify RocksDB max transaction size in bytes'
-)
+              help='Specify RocksDB max transaction size in bytes')
 @click.option('--intermediate-commit-size', type=int,
-    help='Specify RocksDB transaction size in bytes before making intermediate commits'
-)
+              help='Specify RocksDB transaction size in bytes before making intermediate commits')
 @click.option('--intermediate-commit-count', type=int,
-    help='Specify RocksDB transaction operation count before making intermediate commits'
-)
+              help='Specify RocksDB transaction operation count before making intermediate commits')
 @click.option('-a', '--arangosh', type=click.Path(),
-    default='arangosh',
-    help='Use arangosh from given path'
-)
+              default='arangosh', help='Use arangosh from given path')
 @yes_option
 def run(target, state, path,
         db, state_coll, tls, host, port, username, password,
         max_transaction_size, intermediate_commit_size, intermediate_commit_count,
         arangosh, no_interaction):
     """
-    Run all migrations or migrate to a specific target.
+    Run all migrations, or migrate to a specific target.
 
     migrado will check the configured database for migration metadata.
 
     If no target is specified, migrado will run all migrations that have not
-    been applied in sequence.
+    been applied, in sequence.
 
     If a target is specified, migrado will run all migrations between the current
     state and the given state. If the given state is behind the current, reverse
@@ -263,7 +261,7 @@ def run(target, state, path,
 
         click.echo(f'Running {direction} migration {id_} in transaction...')
         error = client.run_transaction(migration, write_collections,
-            max_transaction_size, intermediate_commit_size, intermediate_commit_count)
+                                       max_transaction_size, intermediate_commit_size, intermediate_commit_count)
 
         if error:
             click.echo('Error! %s' % error)

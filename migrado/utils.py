@@ -62,7 +62,7 @@ def parse_write_collections(script):
 def extract_migration(script, name):
     """Extract given (forward, reverse) migration from script"""
     functions_regex = (
-        r'.*(?P<forward>function forward.+{.+})' +
+        r'.*(?P<forward>function forward.+{.+})'
         r'.*(?P<reverse>function reverse.+{.+}).*'
     )
     matches = re.fullmatch(functions_regex, script, re.DOTALL)

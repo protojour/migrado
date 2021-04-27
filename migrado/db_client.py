@@ -12,10 +12,7 @@ from arango.exceptions import *
 
 
 class MigrationClient:
-    """
-    Client for reading and writing state, running migrations
-    against ArangoDB
-    """
+    """Client for reading and writing state, running migrations against ArangoDB"""
 
     def __init__(self, tls, host, port, username, password, db, coll):
         self.protocol = 'https' if tls else 'http'
