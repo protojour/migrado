@@ -1,4 +1,4 @@
-migrado
+Migrado
 =======
 
 [![PyPI package](https://badge.fury.io/py/migrado.svg)](https://pypi.org/project/migrado/)
@@ -6,18 +6,18 @@ migrado
 
 🥑 ArangoDB migrations and batch processing manager.
 
-migrado is a command-line client that can help build and run schema or data migrations against your ArangoDB instance. 
+Migrado is a command-line client that can help build and run schema or data migrations against your ArangoDB instance. 
 
-migrado utilizes ArangoDB Transactions when running data migrations to ensure failed scripts are rolled back automatically. arangosh from the [ArangoDB Client Tools](https://www.arangodb.com/download-major/) is required to run schema migrations, however no transaction safety is available at this point.
+Migrado utilizes ArangoDB Transactions when running data migrations to ensure failed scripts are rolled back automatically. arangosh from the [ArangoDB Client Tools](https://www.arangodb.com/download-major/) is required to run schema migrations, however no transaction safety is available at this point.
 
-**migrado should be considered alpha software.** Make sure you test well before using in a production setting.
+**Migrado should be considered alpha software.** Make sure you test well before using in a production setting.
 
 If you have trouble, open an issue. Contributions are welcome.
 
 Installation
 ------------
 
-migrado requires Python 3.6 or higher.
+Migrado requires Python 3.6 or higher.
 
 ```bash
 $ pip install --user migrado
@@ -26,13 +26,13 @@ $ pip install --user migrado
 Usage
 -----
 
-migrado can create a migrations directory and generate an initial set of collections from the given schema file:
+Migrado can create a migrations directory and generate an initial set of collections from the given schema file:
 
 ```bash
 $ migrado init --schema schema.yml
 ```
 
-See [YAML schemas](#yaml-schemas) for details. If no schema is specified, migrado will create an empty initial migration.
+See [YAML schemas](#yaml-schemas) for details. If no schema is specified, Migrado will create an empty initial migration.
 
 To make a new template migration script:
 
@@ -48,7 +48,7 @@ When you are ready, run all migrations not currently ran against the database:
 $ migrado run
 ```
 
-migrado stores migration state in a configurable collection, see `--help` or [Environment vars](#environment-vars) for details.
+Migrado stores migration state in a configurable collection, see `--help` or [Environment vars](#environment-vars) for details.
 
 If you wrote a `reverse()` migration, you can revert to an earlier point by specifying a target migration id. To revert to the initial migration:
 
@@ -67,7 +67,7 @@ Use the `--help` option for help on any command when using the client.
 Environment vars
 ----------------
 
-The following environment variables are employed by migrado:
+The following environment variables are employed by Migrado:
 
 - `MIGRADO_PATH`: Specifies the path to the migrations directory, replaces `-p`, `--path` (default: `migrations`).
 - `MIGRADO_DB`: Specifies the ArangoDB database name for generated migrations to interact with, replaces `-d`, `--db` (no default, but required for the `run` command).
@@ -83,7 +83,7 @@ YAML schemas
 
 ArangoDB may be schemaless, but in a larger project it still makes sense to keep a schema spec up to date, both for an overview of collections and their data structures, and as a basis for validation.
 
-migrado uses a schema model based on JSON Schema, in YAML, and can use this to generate an initial migration for the collections available in your database.
+Migrado uses a schema model based on JSON Schema, in YAML, and can use this to generate an initial migration for the collections available in your database.
 
 Example schema:
 
@@ -123,7 +123,7 @@ collections:
   authors: 
     # Note, you do not actually need to specify the object schema,
     # but they can be used in API specs (e.g. OpenAPI) and/or validation,
-    # and may be handled by migrado in the future.
+    # and may be handled by Migrado in the future.
 
 edge_collections:
 
@@ -141,7 +141,7 @@ edge_collections:
 Migration scripts
 -----------------
 
-Migration scripts are structured so they may be parsed and run easily by both migrado and ArangoDB. In addition, they are structured so they may be run manually against ArangoDB using `arangosh`.
+Migration scripts are structured so they may be parsed and run easily by both Migrado and ArangoDB. In addition, they are structured so they may be run manually against ArangoDB using `arangosh`.
 
 There are two types of script, **data** and **schema** migration scripts.
 
@@ -204,4 +204,4 @@ Please be careful when running schema migrations in reverse. As you can see, the
 License
 -------
 
-migrado is copyright © 2019 Protojour AS, and is licensed under MIT. See [LICENSE.txt](https://github.com/protojour/migrado/blob/master/LICENSE.txt) for details.
+Migrado is copyright © 2019 Protojour AS, and is licensed under MIT. See [LICENSE.txt](https://github.com/protojour/migrado/blob/master/LICENSE.txt) for details.

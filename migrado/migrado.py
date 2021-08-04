@@ -1,5 +1,5 @@
 """
-migrado – ArangoDB migrations and batch processing manager
+Migrado – ArangoDB migrations and batch processing manager
 
 Copyright © 2019 Protojour AS, licensed under MIT.
 See LICENSE.txt for details.
@@ -61,7 +61,7 @@ pass_option = click.option(
     default='',
     envvar='MIGRADO_PASS', show_envvar=True,
     help='Specify database password to use for running migrations. If only username is given, \
-    migrado will prompt for password.'
+    Migrado will prompt for password.'
 )
 yes_option = click.option(
     '-y', '--no-interaction', is_flag=True,
@@ -85,7 +85,7 @@ def init(schema, path):
     """
     Build an initial migration.
 
-    If no schema is provided, migrado will create the migrations directory
+    If no schema is provided, Migrado will create the migrations directory
     and an empty initial migration.
     """
     migrations_path = ensure_path(path)
@@ -218,12 +218,12 @@ def run(target, state, path,
     """
     Run all migrations, or migrate to a specific target.
 
-    migrado will check the configured database for migration metadata.
+    Migrado will check the configured database for migration metadata.
 
-    If no target is specified, migrado will run all migrations that have not
+    If no target is specified, Migrado will run all migrations that have not
     been applied, in sequence.
 
-    If a target is specified, migrado will run all migrations between the current
+    If a target is specified, Migrado will run all migrations between the current
     state and the given state. If the given state is behind the current, reverse
     migrations are employed.
 

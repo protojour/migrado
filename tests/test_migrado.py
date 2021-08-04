@@ -2,13 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from .conftest import runner, clean_arango
-from migrado import migrado, __version__
+from migrado import migrado
 from migrado.constants import MIGRATION_TEMPLATE
-
-
-def test_version():
-    assert __version__ == '0.5.0'
 
 
 def test_migrado(runner):

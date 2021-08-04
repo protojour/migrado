@@ -1,5 +1,5 @@
 """
-migrado database client
+Migrado database client
 
 Copyright © 2019 Protojour AS, licensed under MIT.
 See LICENSE.txt for details.

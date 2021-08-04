@@ -3,7 +3,6 @@ import os
 import pytest
 from arango.exceptions import *
 
-from .conftest import clean_arango
 from migrado.db_client import MigrationClient
 
 

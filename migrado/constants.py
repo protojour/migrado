@@ -1,5 +1,5 @@
 """
-migrado constants
+Migrado constants
 
 Copyright © 2019 Protojour AS, licensed under MIT.
 See LICENSE.txt for details.
