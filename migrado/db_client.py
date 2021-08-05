@@ -8,7 +8,7 @@ See LICENSE.txt for details.
 import subprocess
 
 from arango import ArangoClient
-from arango.exceptions import *
+from arango.exceptions import TransactionExecuteError
 
 
 class MigrationClient:
@@ -83,7 +83,7 @@ class MigrationClient:
         ]
         if self.username and self.password:
             command += [
-                '--server.authentication', 'true'
+                '--server.authentication', 'true',
                 '--server.username', self.username,
                 '--server.password', self.password,
             ]

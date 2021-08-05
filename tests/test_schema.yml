@@ -32,9 +32,9 @@ collections:
       - isbn
 
   authors:
-    # Note, you do not actually need to specify the object schema,
-    # but they can be used in API specs (e.g. OpenAPI) and/or validation,
-    # and may be handled by migrado in the future.
+    # Note, you do not actually need to specify an object schema,
+    # but they can be used with ArangoDB's built-in validation using the
+    # -v/--validation option
 
 edge_collections:
 

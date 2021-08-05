@@ -42,17 +42,30 @@ def test_migrado_init_schema(runner):
 
         with Path('migrations/0001_initial.js').open('r') as f:
             content = f.read()
-            assert 'db._createDocumentCollection("books")' in content
-            assert 'db._createDocumentCollection("authors")' in content
-            assert 'db._createEdgeCollection("author_of")' in content
-            assert content.index('db._createEdgeCollection("author_of")') > content.index('forward()')
-            assert content.index('db._createEdgeCollection("author_of")') < content.index('reverse()')
+            assert 'db._create("books", {})' in content
+            assert 'db._create("authors", {})' in content
+            assert 'db._create("author_of", {}, "edge")' in content
+            assert content.index('db._create("author_of",') > content.index('forward()')
+            assert content.index('db._create("author_of",') < content.index('reverse()')
 
             assert 'db._drop("books")' in content
             assert 'db._drop("authors")' in content
             assert 'db._drop("author_of")' in content
             assert content.index('db._drop("author_of")') > content.index('reverse()')
             assert content.index('db._drop("author_of")') < content.index('forward() // default')
+
+    with runner.isolated_filesystem():
+
+        result = runner.invoke(migrado, ['init', '--schema', schema_path, '--validation=moderate',])
+        assert result.exit_code == 0
+        assert Path('migrations').exists()
+        assert Path('migrations/0001_initial.js').exists()
+
+        with Path('migrations/0001_initial.js').open('r') as f:
+            content = f.read()
+            assert 'db._create("books", {"schema": {' in content
+            assert 'db._create("authors", {})' in content
+            assert 'db._create("author_of", {"schema": {' in content
 
 
 def test_migrado_inspect(runner):
@@ -92,7 +105,7 @@ def test_migrado_run(runner, clean_arango):
     schema_path = Path('tests/test_schema.yml').resolve()
     with runner.isolated_filesystem():
 
-        result = runner.invoke(migrado, ['init', '--schema', schema_path])
+        result = runner.invoke(migrado, ['init', '--schema', schema_path, '--validation=moderate'])
         assert result.exit_code == 0
 
         result = runner.invoke(migrado, ['run', '--target', '0002'])

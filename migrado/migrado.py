@@ -5,6 +5,8 @@ Copyright © 2019 Protojour AS, licensed under MIT.
 See LICENSE.txt for details.
 """
 
+import json
+
 import click
 import yaml
 
@@ -77,11 +79,17 @@ def migrado():
 
 @migrado.command()
 @click.option(
-    '-s', '--schema', type=click.File('r'),
+    '-s', '--schema',
+    type=click.File('r'),
     help='Build initial migration (collections) from YAML schema'
 )
+@click.option(
+    '-v', '--validation',
+    type=click.Choice(['none', 'new', 'moderate', 'strict']),
+    help='Write validation rules from YAML schema at given level'
+)
 @path_option
-def init(schema, path):
+def init(schema, validation, path):
     """
     Build an initial migration.
 
@@ -100,12 +108,36 @@ def init(schema, path):
 
     if schema:
         schema = yaml.safe_load(schema)
-        for collection in schema.get('collections', {}).keys():
-            forward_data.append(f'db._createDocumentCollection("{collection}")')
-            reverse_data.append(f'db._drop("{collection}")')
-        for collection in schema.get('edge_collections', {}).keys():
-            forward_data.append(f'db._createEdgeCollection("{collection}")')
-            reverse_data.append(f'db._drop("{collection}")')
+
+        for name, props in schema.get('collections', {}).items():
+
+            options = {}
+
+            if validation and props:
+                props.pop('type', {})
+                options['schema'] = {
+                    'rule': props,
+                    'level': validation,
+                    'message': 'Document does not pass collection validation rules'
+                }
+
+            forward_data.append(f'db._create("{name}", {json.dumps(options)})')
+            reverse_data.append(f'db._drop("{name}")')
+
+        for name, props in schema.get('edge_collections', {}).items():
+
+            options = {}
+
+            if validation and props:
+                props.pop('type', {})
+                options['schema'] = {
+                    'rule': props,
+                    'level': validation,
+                    'message': 'Document does not pass collection validation rules'
+                }
+
+            forward_data.append(f'db._create("{name}", {json.dumps(options)}, "edge")')
+            reverse_data.append(f'db._drop("{name}")')
 
     if forward_data:
         initial_data = initial_data.replace(

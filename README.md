@@ -81,7 +81,7 @@ The following environment variables are employed by Migrado:
 YAML schemas
 ------------
 
-ArangoDB may be schemaless, but in a larger project it still makes sense to keep a schema spec up to date, both for an overview of collections and their data structures, and as a basis for validation.
+ArangoDB may be schemaless, but in a larger project it still makes sense to keep a schema spec up to date, both for an overview of collections and their data structures, and as a basis for validation (see the `-v/--validation` option).
 
 Migrado uses a schema model based on JSON Schema, in YAML, and can use this to generate an initial migration for the collections available in your database.
 
@@ -121,9 +121,9 @@ collections:
       - isbn
 
   authors: 
-    # Note, you do not actually need to specify the object schema,
-    # but they can be used in API specs (e.g. OpenAPI) and/or validation,
-    # and may be handled by Migrado in the future.
+    # Note, you do not actually need to specify an object schema,
+    # but they can be used with ArangoDB's built-in validation using the
+    # -v/--validation option
 
 edge_collections:
 
@@ -136,7 +136,7 @@ edge_collections:
     required:
       - _from
       - _to
-``` 
+```
 
 Migration scripts
 -----------------
@@ -186,9 +186,9 @@ Here's an example migration script generated from the YAML schema above:
 ```javascript
 function forward() {
     var db = require("@arangodb").db
-    db._createDocumentCollection("books")
-    db._createDocumentCollection("authors")
-    db._createEdgeCollection("author_of")
+    db._create("books", {}, "document")
+    db._create("authors", {}, "document")
+    db._create("author_of", {}, "edge")
 }
 
 function reverse() {
