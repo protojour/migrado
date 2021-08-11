@@ -32,7 +32,7 @@ Migrado can create a migrations directory and generate an initial set of collect
 $ migrado init --schema schema.yml
 ```
 
-Migrado can also construct an initial migration from the current database structure (and automatically assume it as the current s:
+Migrado can also construct an initial migration from the current database structure (and automatically store it as the current state/schema):
 
 ```bash
 $ migrado init --infer
