@@ -8,9 +8,9 @@ Migrado
 
 Migrado is a command-line client that can help build and run schema or data migrations against your ArangoDB instance. 
 
-Migrado utilizes ArangoDB Transactions when running data migrations to ensure failed scripts are rolled back automatically. arangosh from the [ArangoDB Client Tools](https://www.arangodb.com/download-major/) is required to run schema migrations, however no transaction safety is available at this point.
+Migrado utilizes ArangoDB Transactions when running data migrations to ensure failed scripts are rolled back automatically. `arangosh` from the [ArangoDB Client Tools](https://www.arangodb.com/download-major/) is required to run schema migrations, however no transaction safety is available at this point.
 
-**Migrado should be considered alpha software.** Make sure you test well before using in a production setting.
+**Migrado should be considered beta software,** but it is well tested, and used in production settings. Make sure you understand how it operates.
 
 If you have trouble, open an issue. Contributions are welcome.
 
@@ -26,15 +26,27 @@ $ pip install --user migrado
 Usage
 -----
 
-Migrado can create a migrations directory and generate an initial set of collections from the given schema file:
+Migrado can create a migrations directory and generate an initial set of collections from a given schema file:
 
 ```bash
 $ migrado init --schema schema.yml
 ```
 
-See [YAML schemas](#yaml-schemas) for details. If no schema is specified, Migrado will create an empty initial migration.
+Migrado can also construct an initial migration from the current database structure (and automatically assume it as the current s:
 
-To make a new template migration script:
+```bash
+$ migrado init --infer
+```
+
+See [YAML schemas](#yaml-schemas) for details. If neither option is specified, Migrado will create an empty initial migration.
+
+To autogenerate a schema migration script based on an updated schema:
+
+```bash
+$ migrado make --schema updated_schema.yml
+```
+
+To make a new template data migration script:
 
 ```bash
 $ migrado make --name rewrite_names
@@ -56,10 +68,16 @@ If you wrote a `reverse()` migration, you can revert to an earlier point by spec
 $ migrado run --target 0001
 ```
 
-You can compare the current database migration state with migration files on disk with:
+You can inspect the current migration state with:
 
 ```bash
 $ migrado inspect
+```
+
+You can inspect the current schema (explicit or inferred) with:
+
+```bash
+$ migrado export
 ```
 
 Use the `--help` option for help on any command when using the client.
@@ -181,11 +199,12 @@ Schema migrations are stuctured in the same way as data migrations, but are run 
 
 Schema migrations are structured the same way as data migrations, but `// write` declarations are not required. All operations are allowed.
 
-Here's an example migration script generated from the YAML schema above:
+Here's an example migration script generated from the YAML schema above (with no validation):
 
 ```javascript
 function forward() {
     var db = require("@arangodb").db
+    var schema = // schema to be written to disk
     db._create("books", {}, "document")
     db._create("authors", {}, "document")
     db._create("author_of", {}, "edge")
@@ -199,7 +218,7 @@ function reverse() {
 }
 ```
 
-Please be careful when running schema migrations in reverse. As you can see, the `reverse()` function above would drop your collections if you were to reverse beyond this point. Currently, you will not be able to do so for an initial migration.
+Please be careful when running schema migrations in reverse. As you can see, the `reverse()` function above would drop your collections (and lose your data) if you were to reverse beyond this point. Currently, you will not be able to do so for an initial migration.
 
 License
 -------

@@ -7,7 +7,7 @@ See LICENSE.txt for details.
 
 MIGRATION_TEMPLATE = \
 '''#!/usr/bin/arangosh --javascript.execute
-// migrado migration v0.1
+// migrado migration v0.6
 
 function forward() {
     var db = require("@arangodb").db

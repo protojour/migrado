@@ -35,6 +35,74 @@ def test_read_write_state(clean_arango):
     assert current == '0001'
 
 
+def test_read_write_schema(clean_arango):
+
+    client = MigrationClient(TLS, HOST, PORT, USERNAME, PASSWORD, DB, COLL)
+    current = client.read_schema()
+
+    assert current == {}
+
+    success = client.write_schema({"test": "schema"})
+    current = client.read_schema()
+
+    assert success
+    assert current == {"test": "schema"}
+
+
+def test_infer_schema(clean_arango):
+
+    client = MigrationClient(TLS, HOST, PORT, USERNAME, PASSWORD, DB, COLL)
+    schema = client.infer_schema(validation=False)
+
+    assert schema == {
+        'collections': {},
+        'edge_collections': {}
+    }
+
+    collection_schema = {
+        'rule': {
+            'properties': {
+                'test': {
+                    'type': 'string'
+                }
+            }
+        },
+        'level': 'strict',
+        'message': 'Test message'
+    }
+    client.db.create_collection('things', schema=collection_schema)
+    client.db.create_collection('stuff')
+    client.db.create_collection('has_stuff', edge=True, schema=collection_schema)
+
+    schema = client.infer_schema(validation=False)
+
+    assert schema == {
+        'collections': {
+            'things': None,
+            'stuff': None
+        },
+        'edge_collections': {
+            'has_stuff': None
+        }
+    }
+
+    schema = client.infer_schema(validation=True)
+
+    assert schema == {
+        'collections': {
+            'things': {
+                'schema': collection_schema
+            },
+            'stuff': None
+        },
+        'edge_collections': {
+            'has_stuff': {
+                'schema': collection_schema
+            }
+        }
+    }
+
+
 def test_run_transaction(clean_arango):
 
     client = MigrationClient(TLS, HOST, PORT, USERNAME, PASSWORD, DB, COLL)
@@ -83,7 +151,7 @@ def test_run_script(clean_arango):
     valid_function = '''
     function forward() {
         var db = require("@arangodb").db
-        db._createDocumentCollection("things")
+        db._create("things")
     }
     '''
 

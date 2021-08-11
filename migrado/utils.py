@@ -6,6 +6,7 @@ See LICENSE.txt for details.
 """
 
 from pathlib import Path
+import json
 import re
 
 import click
@@ -68,3 +69,24 @@ def extract_migration(script, name):
     matches = re.fullmatch(functions_regex, script, re.DOTALL)
     if matches and name in matches.groupdict():
         return matches.group(name)
+
+
+def extract_schema(script):
+    """Extract schema from script"""
+    schema_regex = r'var schema = (.+)'
+    match = re.search(schema_regex, script)
+    if match:
+        return json.loads(match.group(1))
+
+
+def get_options(props, validation):
+    options = {}
+    if props and validation:
+        props.pop('type', {})
+        options['schema'] = {
+            'rule': props,
+            'level': validation,
+            'message': 'Document violates collection validation rules'
+        }
+
+    return options

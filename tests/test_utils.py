@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import click
+import json
 
 from migrado.utils import *
 
@@ -151,3 +152,55 @@ def test_extract_migration():
 
     assert forward_migration is None
     assert nothing_migration is None
+
+
+def test_extract_schema():
+    test_schema = '{"test": "schema"}'
+
+    script = f'''
+    test string please ignore
+    var schema = {test_schema}
+    also this
+    '''
+
+    schema = extract_schema(script)
+
+    assert schema == json.loads(test_schema)
+
+    script = f'''
+    this script has nothing (interesting) in it
+    '''
+
+    schema = extract_schema(script)
+
+    assert schema is None
+
+
+def test_get_options():
+    props = {}
+    options = get_options(props, validation=None)
+    assert options == {}
+
+    options = get_options(props, validation='strict')
+    assert options == {}
+
+    props = {
+        'type': 'object',
+        'properties': {
+            'test': 'props'
+        }
+    }
+
+    options = get_options(props, validation=None)
+    assert options == {}
+
+    options = get_options(props, validation='strict')
+    assert options == {
+        'schema': {
+            'rule': {
+                'properties': props['properties']
+            },
+            'level': 'strict',
+            'message': 'Document violates collection validation rules'
+        }
+    }

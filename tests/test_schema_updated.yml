@@ -1,0 +1,73 @@
+---
+
+all: &all
+  _id:
+    type: string
+    readOnly: true
+  _key:
+    type: string
+    readOnly: true
+  _rev:
+    type: string
+    readOnly: true
+
+edges: &edges
+  _from:
+    type: string
+  _to:
+    type: string
+
+collections:
+
+  books:
+    type: object
+    properties:
+      <<: *all
+      title:
+        type: string
+      isbn:
+        type: string
+        pattern: ^(97(8|9))?\d{9}(\d|X)$
+    required:
+      - title
+      - isbn
+
+  authors:
+    type: object
+    properties:
+      <<: *all
+      name:
+        type: string
+    required:
+      - name
+
+  publishers:
+    type: object
+    properties:
+      <<: *all
+      name:
+        type: string
+    required:
+      - name
+
+edge_collections:
+
+  # authors --author_of--> books
+  author_of:
+    type: object
+    properties:
+      <<: *all
+      <<: *edges
+    required:
+      - _from
+      - _to
+
+  # books --published_by--> publishers
+  published_by:
+    type: object
+    properties:
+      <<: *all
+      <<: *edges
+    required:
+      - _from
+      - _to
