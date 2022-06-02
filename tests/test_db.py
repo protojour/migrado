@@ -68,7 +68,8 @@ def test_infer_schema(clean_arango):
             }
         },
         'level': 'strict',
-        'message': 'Test message'
+        'message': 'Test message',
+        'type': 'json',
     }
     client.db.create_collection('things', schema=collection_schema)
     client.db.create_collection('stuff')

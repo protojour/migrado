@@ -208,7 +208,7 @@ def test_migrado_run(runner, clean_arango):
 
         result = runner.invoke(migrado, ['run', '--host', 'nohost'])
         assert result.exit_code == 1
-        assert 'Name or service not known' in result.output
+        assert 'Can\'t connect to host(s)' in result.output
 
         result = runner.invoke(migrado, ['run', '--arangosh', '/bad/path'])
         assert result.exit_code == 1
