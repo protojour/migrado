@@ -5,6 +5,7 @@ services:
   test:
     build:
       context: .
+      dockerfile: tests.Dockerfile
     tty: true
     environment:
       MIGRADO_DB: test

@@ -17,11 +17,13 @@ If you have trouble, open an issue. Contributions are welcome.
 Installation
 ------------
 
-Migrado requires Python 3.6 or higher.
+Migrado requires Python 3.6 or higher, and the ArangoDB `arangosh` client.
 
 ```bash
 $ pip install --user migrado
 ```
+
+It is also available as a Docker image, see [Docker usage](#docker-usage).
 
 Usage
 -----
@@ -81,6 +83,37 @@ $ migrado export
 ```
 
 Use the `--help` option for help on any command when using the client.
+
+Docker usage
+------------
+
+If you're using Migrado in a Docker context, you might as well use the [Docker image](https://hub.docker.com/r/protojour/migrado). `migrado` is set as entrypoint, so the image can be used like the Python client:
+
+```bash
+$ docker run protojour/migrado --help
+```
+
+You'd want to volume in your migrations folder:
+
+```bash
+$ docker run -v /path/to/migrations:/app/migrations protojour/migrado
+```
+
+Or, an example using docker-compose:
+
+```yaml
+migrado:
+  image: protojour/migrado:latest
+  environment:
+    MIGRADO_DB: # ...
+    MIGRADO_HOST: # ...
+  volumes:
+    - ./migrations:/app/migrations
+```
+
+Then either add a `command:` (with a migrado sub-command, e.g. `command: run ...`), or use this as a starting point for a scripted migration strategy.
+
+You may also use the base [Dockerfile](https://github.com/protojour/migrado/blob/master/Dockerfile) as a starting point.
 
 Environment vars
 ----------------
