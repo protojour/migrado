@@ -8,8 +8,8 @@ RUN rm /tmp/arango_client.deb
 RUN apt-get autoremove -y wget
 
 WORKDIR /app
-COPY pyproject.toml LICENSE.txt README.md /app/
-COPY migrado /app/migrado
-RUN pip install .
+RUN pip install poetry
+COPY pyproject.toml poetry.lock LICENSE.txt README.md migrado /app/
+RUN poetry install --no-dev --no-interaction
 
-ENTRYPOINT ["migrado"]
+ENTRYPOINT ["poetry", "run", "migrado"]

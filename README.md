@@ -51,12 +51,12 @@ $ migrado make --schema updated_schema.yml
 To make a new template data migration script:
 
 ```bash
-$ migrado make --name rewrite_names
+$ migrado make --name rewrite_field_names
 ```
 
-This will create a new file, `migrations/0002_rewrite_names.js` (`--name` is optional), which you can edit as you see fit. See [Migration scripts](#migration-scripts) for details.
+This will create a new file, `migrations/0002_rewrite_field_names.js` (`--name` is optional), which you can edit as you see fit. See [Migration scripts](#migration-scripts) for details.
 
-When you are ready, run all migrations not currently ran against the database: 
+When you are ready, run all migrations (not previously ran) against the database: 
 
 ```bash
 $ migrado run
@@ -132,14 +132,13 @@ The following environment variables are employed by Migrado:
 YAML schemas
 ------------
 
-ArangoDB may be schemaless, but in a larger project it still makes sense to keep a schema spec up to date, both for an overview of collections and their data structures, and as a basis for validation (see the `-v/--validation` option).
+ArangoDB may be schemaless, but in a larger project it still makes sense to keep a schema spec up to date, both for an overview of collections and their data structures, and as a basis for [native collection-level validation](https://www.arangodb.com/docs/3.9/data-modeling-documents-schema-validation.html) (see the `-v/--validation` option).
 
 Migrado uses a schema model based on JSON Schema, in YAML, and can use this to generate an initial migration for the collections available in your database.
 
 Example schema:
 
 ```yaml
----
 all: &all
   _id:
     type: string
@@ -171,10 +170,10 @@ collections:
       - title
       - isbn
 
-  authors: 
-    # Note, you do not actually need to specify an object schema,
-    # but they can be used with ArangoDB's built-in validation using the
-    # -v/--validation option
+  authors:
+    # Note: you do not actually need to specify an object schema,
+    # but the schema can be used with ArangoDB's native validation 
+    # using the -v/--validation option
 
 edge_collections:
 

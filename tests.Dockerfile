@@ -8,12 +8,11 @@ RUN rm /tmp/arango_client.deb
 RUN apt-get autoremove -y wget
 
 WORKDIR /app
-COPY pyproject.toml requirements.dev LICENSE.txt README.md /app/
-COPY migrado /app/migrado
-RUN pip install -r requirements.dev
-RUN pip install .
+RUN pip install poetry
+COPY pyproject.toml poetry.lock LICENSE.txt README.md migrado /app/
+RUN poetry install --no-interaction
 
 CMD sleep 3 && \
-    pylint -E migrado && \
-    pytest -svv --cov=migrado --cov-report term-missing; \
+    poetry run pylint -E migrado && \
+    poetry run pytest -svv --cov=migrado --cov-report term-missing; \
     make clean

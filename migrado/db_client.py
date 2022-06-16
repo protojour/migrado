@@ -9,12 +9,37 @@ import subprocess
 
 from arango import ArangoClient
 from arango.exceptions import TransactionExecuteError
+from arango.http import DefaultHTTPClient
+from arango.response import Response
 
+
+class HTTPClient(DefaultHTTPClient):
+    def __init__(self, timeout):
+        self.timeout = timeout
+
+    def send_request(self, session, method, url, params=None, data=None, headers=None, auth=None):
+        response = session.request(
+            method=method,
+            url=url,
+            params=params,
+            data=data,
+            headers=headers,
+            auth=auth,
+            timeout=self.timeout
+        )
+        return Response(
+            method=response.request.method,
+            url=response.url,
+            headers=response.headers,
+            status_code=response.status_code,
+            status_text=response.reason,
+            raw_body=response.text,
+        )
 
 class MigrationClient:
     """Client for reading and writing state, running migrations against ArangoDB"""
 
-    def __init__(self, tls, host, port, username, password, db, coll):
+    def __init__(self, tls, host, port, username, password, db, coll, timeout=1200):
         self.protocol = 'https' if tls else 'http'
         self.host = host
         self.port = port
@@ -22,8 +47,10 @@ class MigrationClient:
         self.password = password
         self.db_name = db
         self.coll_name = coll
+        self.timeout = timeout
 
-        self.db_client = ArangoClient(f'{self.protocol}://{host}:{port}')
+        http_client = HTTPClient(timeout=timeout)
+        self.db_client = ArangoClient(f'{self.protocol}://{host}:{port}', http_client=http_client)
 
     @property
     def db(self):
@@ -113,13 +140,14 @@ class MigrationClient:
         return schema
 
     def run_transaction(self, script, write_collections,
-            max_transaction_size=None, intermediate_commit_size=None, intermediate_commit_count=None):
+            max_transaction_size=None, intermediate_commit_size=None, intermediate_commit_count=None,
+            sync=True):
         """Execute JavaScript command in transaction against ArangoDB"""
         try:
             return self.db.execute_transaction(
                 script,
                 write=write_collections,
-                sync=True,
+                sync=sync,
                 allow_implicit=True,
                 max_size=max_transaction_size,
                 intermediate_commit_size=intermediate_commit_size,
@@ -133,7 +161,8 @@ class MigrationClient:
         command = [
             arangosh,
             '--server.endpoint', f'{self.protocol}://{self.host}:{self.port}',
-            '--server.database', f'{self.db_name}'
+            '--server.database', f'{self.db_name}',
+            '--server.request-timeout', f'{self.timeout}'
         ]
         if self.username and self.password:
             command += [

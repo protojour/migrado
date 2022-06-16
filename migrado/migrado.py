@@ -66,6 +66,11 @@ pass_option = click.option(
     help=('Specify database password to use for running migrations. If only username is given, ' +
     'Migrado will prompt for password.')
 )
+timeout_option = click.option(
+    '--timeout', type=int,
+    default=1200, show_default=True,
+    help='Request timeout in seconds'
+)
 validation_option = click.option(
     '-v', '--validation',
     type=click.Choice(['none', 'new', 'moderate', 'strict']),
@@ -424,6 +429,11 @@ def make(name, schema, validation,
     '--intermediate-commit-count', type=int,
     help='Specify RocksDB transaction operation count before making intermediate commits'
 )
+@timeout_option
+@click.option(
+    '--async', 'async_', is_flag=True,
+    help='Run transactions asynchronously'
+)
 @click.option(
     '-a', '--arangosh', type=click.Path(),
     default='arangosh', help='Use arangosh from given path'
@@ -432,7 +442,7 @@ def make(name, schema, validation,
 def run(target, state,
         path, db, state_coll, tls, host, port, username, password,
         max_transaction_size, intermediate_commit_size, intermediate_commit_count,
-        arangosh, no_interaction):
+        timeout, async_, arangosh, no_interaction):
     """
     Run all migrations, or migrate to a specific target.
 
@@ -462,7 +472,7 @@ def run(target, state,
 
     password = check_password(username, password, no_interaction)
 
-    db_client = MigrationClient(tls, host, port, username, password, db, state_coll)
+    db_client = MigrationClient(tls, host, port, username, password, db, state_coll, timeout)
 
     try:
         state = state or db_client.read_state()
@@ -479,7 +489,8 @@ def run(target, state,
 
         click.echo(f'Running {direction} migration {id_} in transaction...')
         error = db_client.run_transaction(migration, write_collections,
-            max_transaction_size, intermediate_commit_size, intermediate_commit_count
+            max_transaction_size, intermediate_commit_size, intermediate_commit_count,
+            not async_
         )
 
         if error:
