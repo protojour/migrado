@@ -1,0 +1,11 @@
+.git
+.github
+.pytest_cache
+dist
+tests
+.coverage
+.gitignore
+Dockerfile
+Makefile
+*.sublime-*
+tests.Dockerfile

@@ -1,4 +1,4 @@
-FROM python:3.10-slim-bullseye
+FROM python:3.11-slim-bullseye
 
 RUN apt-get -y update && \
     apt-get -y install wget make
@@ -9,7 +9,8 @@ RUN apt-get autoremove -y wget
 
 WORKDIR /app
 RUN pip install poetry
-COPY pyproject.toml poetry.lock LICENSE.txt README.md migrado /app/
+COPY pyproject.toml poetry.lock LICENSE.txt README.md /app/
+COPY migrado /app/migrado
 RUN poetry install --no-interaction
 
 CMD sleep 3 && \

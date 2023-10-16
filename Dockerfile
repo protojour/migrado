@@ -9,7 +9,8 @@ RUN apt-get autoremove -y wget
 
 WORKDIR /app
 RUN pip install poetry
-COPY pyproject.toml poetry.lock LICENSE.txt README.md migrado /app/
+COPY pyproject.toml poetry.lock LICENSE.txt README.md /app/
+COPY migrado /app/migrado
 RUN poetry install --no-dev --no-interaction
 
 ENTRYPOINT ["poetry", "run", "migrado"]
