@@ -9,32 +9,7 @@ import subprocess
 
 from arango import ArangoClient
 from arango.exceptions import TransactionExecuteError
-from arango.http import DefaultHTTPClient
-from arango.response import Response
 
-
-class HTTPClient(DefaultHTTPClient):
-    def __init__(self, timeout):
-        self.timeout = timeout
-
-    def send_request(self, session, method, url, params=None, data=None, headers=None, auth=None):
-        response = session.request(
-            method=method,
-            url=url,
-            params=params,
-            data=data,
-            headers=headers,
-            auth=auth,
-            timeout=self.timeout
-        )
-        return Response(
-            method=response.request.method,
-            url=response.url,
-            headers=response.headers,
-            status_code=response.status_code,
-            status_text=response.reason,
-            raw_body=response.text,
-        )
 
 class MigrationClient:
     """Client for reading and writing state, running migrations against ArangoDB"""
@@ -49,8 +24,7 @@ class MigrationClient:
         self.coll_name = coll
         self.timeout = timeout
 
-        http_client = HTTPClient(timeout=timeout)
-        self.db_client = ArangoClient(f'{self.protocol}://{host}:{port}', http_client=http_client)
+        self.db_client = ArangoClient(f'{self.protocol}://{host}:{port}', request_timeout=timeout)
 
     @property
     def db(self):
