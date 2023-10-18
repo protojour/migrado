@@ -1,16 +1,17 @@
-FROM python:3.11-slim-bullseye
+FROM python:3.12-bookworm
 
-RUN apt-get -y update && \
-    apt-get -y install wget
-RUN wget --progress=bar:force https://download.arangodb.com/arangodb39/Community/Linux/arangodb3-client_3.9.1-1_amd64.deb -O /tmp/arango_client.deb
-RUN dpkg -i /tmp/arango_client.deb
-RUN rm /tmp/arango_client.deb
-RUN apt-get autoremove -y wget
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+
+RUN curl -o /tmp/arango-client.deb https://download.arangodb.com/arangodb311/DEBIAN/amd64/arangodb3-client_3.11.4-1_amd64.deb \
+    && dpkg -i /tmp/arango-client.deb \
+    && rm /tmp/arango-client.deb
 
 WORKDIR /app
-RUN pip install poetry
-COPY pyproject.toml poetry.lock LICENSE.txt README.md /app/
-COPY migrado /app/migrado
-RUN poetry install --no-dev --no-interaction
+RUN pip install migrado
 
-ENTRYPOINT ["poetry", "run", "migrado"]
+USER ${USER_ID}:${GROUP_ID}
+COPY README.md .
+COPY LICENSE.txt .
+
+ENTRYPOINT [ "migrado" ]
