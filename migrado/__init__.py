@@ -1,1 +1,1 @@
-from .migrado import migrado
+from .migrado import migrado  # noqa

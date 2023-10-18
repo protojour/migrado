@@ -144,7 +144,7 @@ def init(schema, infer, validation, path,
 
         if schema['collections'] or schema['edge_collections']:
             db_client.write_state('0001')
-            click.echo(f'State is now at 0001.')
+            click.echo('State is now at 0001.')
             db_client.write_schema(schema)
             click.echo('Schema stored in database.')
 
